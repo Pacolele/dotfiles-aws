@@ -13,7 +13,7 @@ return {
       "css-lsp",
       "typescript-language-server",
       -- Django
-      "djlsp",
+      -- "djlsp",
     },
   },
 }

@@ -26,7 +26,7 @@ zstyle ':prezto:load' pmodule \
 zstyle ':prezto:module:editor' key-bindings 'emacs'
 
 # Prompt theme (default Prezto theme)
-zstyle ':prezto:module:prompt' theme 'sorin'
+zstyle ':prezto:module:prompt' theme 'powerlevel10k'
 
 # Terminal - auto set titles
 zstyle ':prezto:module:terminal' auto-title 'yes'
@@ -34,7 +34,7 @@ zstyle ':prezto:module:terminal:window-title' format '%n@%m: %s'
 zstyle ':prezto:module:terminal:tab-title' format '%m: %s'
 
 # Tmux - auto start and attach to session
-zstyle ':prezto:module:tmux:auto-start' local 'yes'
+zstyle ':prezto:module:tmux:auto-start' local 'no'
 zstyle ':prezto:module:tmux:session' name 'main'
 
 # Syntax highlighting

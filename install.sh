@@ -1,104 +1,52 @@
 #!/usr/bin/env bash
+# Bootstrap: install chezmoi, back up existing configs, apply this repo.
+# Safe to re-run. Day-to-day use is plain `chezmoi` (see README).
 set -euo pipefail
 
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BACKUP_DIR="$HOME/.dotfiles-backup/$(date +%Y%m%d_%H%M%S)"
+export PATH="$HOME/.local/bin:$HOME/.pixi/bin:$PATH"
 
-echo "Dotfiles installer"
-echo "=================="
+echo "Dotfiles installer (chezmoi)"
 echo "Repo:   $DOTFILES_DIR"
 echo "Backup: $BACKUP_DIR"
 echo ""
 
-# --- Install dependencies ---
-install_deps() {
-  echo "Installing dependencies..."
-  if [[ "$OSTYPE" == darwin* ]]; then
-    if ! command -v brew &>/dev/null; then
-      echo "Installing Homebrew..."
-      /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    fi
-    brew install neovim tmux alacritty fzf eza zoxide fd git
-  else
-    # Linux - use pixi for cross-distro support
-    if ! command -v pixi &>/dev/null; then
-      echo "Installing pixi..."
-      curl -fsSL https://pixi.sh/install.sh | bash
-      export PATH="$HOME/.pixi/bin:$PATH"
-    fi
-    pixi global install neovim tmux fzf eza zoxide fd-find git
-    echo "Note: Install alacritty via your package manager (apt/dnf/pacman)"
+# --- chezmoi ---
+if ! command -v chezmoi >/dev/null 2>&1; then
+  echo "Installing chezmoi to ~/.local/bin..."
+  sh -c "$(curl -fsLS get.chezmoi.io)" -- -b "$HOME/.local/bin"
+fi
+
+# --- Remove symlinks left by the old symlink-based installer ---
+for p in .config/nvim .config/alacritty .zshrc .zpreztorc .zprofile .tmux.conf; do
+  target="$HOME/$p"
+  if [[ -L "$target" && "$(readlink "$target")" == "$DOTFILES_DIR"/* ]]; then
+    echo "  Removing old symlink: $target"
+    rm "$target"
   fi
-}
+done
 
-# --- Backup existing configs ---
-backup() {
-  local target="$1"
-  if [[ -e "$target" || -L "$target" ]]; then
-    mkdir -p "$BACKUP_DIR"
-    echo "  Backing up: $target -> $BACKUP_DIR/"
-    mv "$target" "$BACKUP_DIR/$(basename "$target")"
+# --- Generate ~/.config/chezmoi/chezmoi.toml (prompts once) ---
+# Extra args go to chezmoi init, e.g. ./install.sh --promptBool "work machine=false"
+chezmoi init --source "$DOTFILES_DIR" "$@"
+
+# --- Back up existing files chezmoi is about to modify ---
+backed_up=0
+while IFS= read -r line; do
+  rel="${line:3}"
+  target="$HOME/$rel"
+  if [[ -f "$target" && ! -L "$target" ]]; then
+    mkdir -p "$BACKUP_DIR/$(dirname "$rel")"
+    cp -p "$target" "$BACKUP_DIR/$rel"
+    backed_up=$((backed_up + 1))
   fi
-}
+done < <(chezmoi status --include files --path-style relative)
+(( backed_up > 0 )) && echo "Backed up $backed_up file(s) to $BACKUP_DIR"
 
-# --- Symlink helper ---
-link_file() {
-  local src="$1"
-  local dest="$2"
-  backup "$dest"
-  mkdir -p "$(dirname "$dest")"
-  ln -sf "$src" "$dest"
-  echo "  Linked: $dest -> $src"
-}
-
-# --- Install Prezto ---
-install_prezto() {
-  if [[ ! -d "$HOME/.zprezto" ]]; then
-    echo "Installing Prezto..."
-    git clone --recursive https://github.com/sorin-ionescu/prezto.git "$HOME/.zprezto"
-  else
-    echo "Prezto already installed."
-  fi
-}
-
-# --- Install TPM (Tmux Plugin Manager) ---
-install_tpm() {
-  if [[ ! -d "$HOME/.tmux/plugins/tpm" ]]; then
-    echo "Installing TPM..."
-    git clone https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
-  else
-    echo "TPM already installed."
-  fi
-}
-
-# --- Main ---
-echo "[1/6] Installing dependencies..."
-install_deps
+# --- Apply (also runs pixi / prezto / tpm bootstrap scripts) ---
+chezmoi apply --verbose
 
 echo ""
-echo "[2/6] Installing Prezto..."
-install_prezto
-
-echo ""
-echo "[3/6] Installing TPM..."
-install_tpm
-
-echo ""
-echo "[4/6] Linking Neovim config..."
-link_file "$DOTFILES_DIR/nvim" "$HOME/.config/nvim"
-
-echo ""
-echo "[5/6] Linking shell configs..."
-link_file "$DOTFILES_DIR/zsh/.zshrc" "$HOME/.zshrc"
-link_file "$DOTFILES_DIR/zsh/.zpreztorc" "$HOME/.zpreztorc"
-link_file "$DOTFILES_DIR/zsh/.zprofile" "$HOME/.zprofile"
-
-link_file "$DOTFILES_DIR/tmux/.tmux.conf" "$HOME/.tmux.conf"
-
-echo ""
-echo "[6/6] Linking Alacritty config..."
-link_file "$DOTFILES_DIR/alacritty" "$HOME/.config/alacritty"
-
-echo ""
-echo "Done! Restart your terminal or run: source ~/.zshrc"
-echo "For tmux plugins, open tmux and press: prefix + I"
+echo "Done. Restart your terminal or run: exec zsh"
+echo "Tmux plugins: open tmux and press prefix + I"

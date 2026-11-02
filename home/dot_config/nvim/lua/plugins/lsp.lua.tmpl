@@ -14,11 +14,11 @@ return {
         -- JavaScript/TypeScript
         ts_ls = {},
         -- Django templates (uses django-html filetype)
-        djlsp = {},
+        --        djlsp = {},
         -- Java
         jdtls = {
           cmd_env = {
-            JAVA_HOME = "/home/ehernesten/.pixi/envs/jdk21/lib/jvm",
+            JAVA_HOME = "{{ .chezmoi.homeDir }}/.pixi/envs/jdk21/lib/jvm",
           },
           settings = {
             java = {
@@ -30,7 +30,7 @@ return {
                 runtimes = {
                   {
                     name = "JavaSE-17",
-                    path = "/home/ehernesten/.pixi/envs/openjdk/lib/jvm",
+                    path = "{{ .chezmoi.homeDir }}/.pixi/envs/openjdk/lib/jvm",
                     default = true,
                   },
                 },

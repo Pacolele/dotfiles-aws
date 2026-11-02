@@ -7,7 +7,7 @@ import = ["~/.config/alacritty/themes/catppuccin-macchiato.toml"]
 TERM = "xterm-256color"
 
 [shell]
-program = "/home/ehernesten/.pixi/bin/zsh"
+program = "{{ .chezmoi.homeDir }}/.pixi/bin/zsh"
 args = ["--login"]
 
 [window]

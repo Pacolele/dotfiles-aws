@@ -6,4 +6,6 @@ if vim.g.vscode then
   -- Enable showmode so vscode-neovim reports mode as "-- INSERT --" etc.
   -- Required for neovim-statusline extension to detect mode changes.
   vim.opt.showmode = true
+  -- Yank/paste uses system clipboard in Kiro
+  vim.opt.clipboard = "unnamedplus"
 end

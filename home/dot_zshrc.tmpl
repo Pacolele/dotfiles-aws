@@ -1,0 +1,186 @@
+# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
+# Initialization code that may require console input (password prompts, [y/n]
+# confirmations, etc.) must go above this block; everything else may go below.
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
+
+#
+# Prezto
+#
+if [[ -s "${ZDOTDIR:-$HOME}/.zprezto/init.zsh" ]]; then
+  source "${ZDOTDIR:-$HOME}/.zprezto/init.zsh"
+fi
+
+#
+# Tmux session picker (guarded, non-fatal)
+#
+# Prezto's own auto-start is disabled in .zpreztorc because it runs
+# `exec tmux attach -d` on every shell: if the attach fails the whole shell
+# dies (the window closes instantly), and `-d` steals the session from
+# whatever terminal already has it.
+#
+# We deliberately DO NOT use `exec` here. `exec` replaces the shell with tmux,
+# so if tmux fails to start for any reason the window dies instantly. Instead
+# we run tmux as a child process and, when it exits (detach, or a startup
+# failure), fall through to the normal interactive shell. Everything is
+# wrapped so a picker/tmux error can never take down the terminal.
+#
+# Set NO_TMUX=1 in the environment to skip this entirely (useful for debugging
+# a crashing shell: `NO_TMUX=1 alacritty`).
+if [[ -z "$NO_TMUX" ]] \
+   && command -v tmux >/dev/null 2>&1 \
+   && [[ -z "$TMUX" && -z "$INSIDE_EMACS" && "$TERM_PROGRAM" != "vscode" ]] \
+   && [[ -o interactive ]]; then
+  () {
+    # Collect existing session names (empty if no server is running).
+    local sessions choice
+    sessions="$(tmux list-sessions -F '#{session_name}' 2>/dev/null)"
+
+    if [[ -z "$sessions" ]]; then
+      # No sessions/server yet -> create & attach "main" (non-fatal).
+      tmux new-session -s main
+    elif command -v fzf >/dev/null 2>&1; then
+      # Fuzzy picker: existing sessions plus a "new session" entry.
+      local new_entry='+ new session'
+      choice="$(print -l -- "$new_entry" "${(f)sessions}" \
+        | fzf --prompt='tmux> ' --height=40% --reverse \
+              --header='Pick a session (Esc for a plain shell)' 2>/dev/null)"
+
+      if [[ "$choice" == "$new_entry" ]]; then
+        tmux new-session
+      elif [[ -n "$choice" ]] && tmux has-session -t "$choice" 2>/dev/null; then
+        tmux attach -t "$choice"
+      fi
+      # Cancelled (empty) or unknown name -> plain shell.
+    else
+      # fzf not available -> simple typed prompt.
+      print -P '%F{cyan}Existing tmux sessions:%f'
+      print -- "$sessions" | sed 's/^/  /'
+      print -n 'Attach to session (name), [n]ew, or [Enter] for a plain shell: '
+      read -r choice
+      if [[ "$choice" == "n" ]]; then
+        tmux new-session
+      elif [[ -n "$choice" ]] && tmux has-session -t "$choice" 2>/dev/null; then
+        tmux attach -t "$choice"
+      fi
+    fi
+  }
+fi
+
+#
+# PATH
+#
+export PATH="$HOME/.fzf/bin:$HOME/.pixi/bin:$PATH:/opt/nvim-linux-x86_64/bin"
+
+{{ if .work -}}
+#
+# AWS (work machines only; values live in ~/.config/chezmoi/chezmoi.toml)
+#
+# CodeArtifact auth tokens for Maven / the RedHat Java extension.
+# settings.xml reads these from the environment:
+#   central-mirror / m3dsa-* servers -> CODEARTIFACT_M3DSA_AUTH_TOKEN
+#   m3msa server                     -> CODEARTIFACT_M3MSA_AUTH_TOKEN
+# A failed mint (expired SSO) must NOT overwrite a good token with "".
+_ca_sso_session={{ .awsSsoSession | quote }}
+_ca_profile={{ .awsProfile | quote }}
+
+_ca_mint() {
+  # $1 = domain, $2 = domain-owner
+  aws codeartifact get-authorization-token \
+    --domain "$1" --domain-owner "$2" --region us-east-1 \
+    --profile "$_ca_profile" --query authorizationToken --output text 2>/dev/null
+}
+
+_ca_refresh_one() {
+  # $1 = env var name, $2 = domain, $3 = domain-owner
+  local _tok
+  _tok=$(_ca_mint "$2" "$3")
+  if [ -n "$_tok" ]; then
+    export "$1"="$_tok"
+    return 0
+  fi
+  return 1
+}
+
+# Re-mint tokens into the current shell. Call this any time the IDE
+# starts fetching wrong jars, instead of opening a new terminal.
+# m3dsa is required (gates Java dependency resolution); m3msa is
+# best-effort — the dsa profile currently cannot mint it, so a failure
+# there is ignored silently.
+ca-refresh() {
+  _ca_refresh_one CODEARTIFACT_M3MSA_AUTH_TOKEN m3msa {{ .awsM3msaOwner }}  # best-effort, quiet
+  if _ca_refresh_one CODEARTIFACT_M3DSA_AUTH_TOKEN m3dsa {{ .awsM3dsaOwner }}; then
+    echo "CodeArtifact m3dsa token refreshed (len=${#CODEARTIFACT_M3DSA_AUTH_TOKEN})"
+    return 0
+  fi
+  echo "⚠️  CodeArtifact m3dsa token not refreshed — SSO likely expired." >&2
+  echo "    Run: aws sso login --sso-session $_ca_sso_session" >&2
+  return 1
+}
+
+# Populate on shell startup, but stay quiet on success.
+ca-refresh >/dev/null 2>&1 || {
+  echo "⚠️  CodeArtifact token not set — SSO likely expired." >&2
+  echo "    Run: aws sso login --sso-session $_ca_sso_session   (then: ca-refresh)" >&2
+}
+
+{{ end -}}
+#
+# Aliases
+#
+# Grep: use underline + bold blue for matches (readable on dark backgrounds)
+export GREP_COLORS='ms=01;34:mc=01;34:sl=:cx=:fn=35:ln=32:bn=32:se=36'
+
+alias ls='eza -a --group-directories-first --icons'
+alias ll='eza -al --group-directories-first --icons'
+alias ld='eza -D --icons'
+alias lf='eza -f --color=always'
+alias lh='eza -d .* --group-directories-first --icons'
+alias lt='eza -a --sort=modified --icons'
+
+alias src='source ~/.zshrc'
+alias zconf='nvim ~/.zshrc'
+[[ -x ~/scripts/git-script/pretty-status ]] && alias gst='~/scripts/git-script/pretty-status'
+alias kcli='kiro-cli --v3'
+
+{{ if .work -}}
+# M3 / Atlas (work machines only)
+alias atlas-update='cd ~/atlas && git pull && uv sync && uv run atlas-trunk-sync --yes'
+alias m3be='cd ~/business-engine/trunk/ && kiro BE-Workspace.code-workspace'
+alias atlas='cd ~/atlas/'
+alias mcli='cd ~/business-engine/trunk/ && kiro-cli --v3 --agent m3be'
+
+{{ end -}}
+#
+# Zoxide
+#
+command -v zoxide >/dev/null && eval "$(zoxide init zsh)"
+
+#
+# fzf (needs >= 0.48 for --zsh; ~/.fzf/bin wins over pixi via PATH order)
+#
+command -v fzf >/dev/null && source <(fzf --zsh)
+
+#
+# Kiro shell integration
+#
+[[ "$TERM_PROGRAM" == "kiro" ]] && . "$(kiro --locate-shell-integration-path zsh)"
+
+#
+# Terminal-specific settings
+#
+if [[ "$TERM_PROGRAM" == "ghostty" ]]; then
+  export TERM=xterm-ghostty
+fi
+
+# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
+[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+# Keyboard repeat rate (X11 / XWayland only)
+[[ -n "$DISPLAY" ]] && command -v xset >/dev/null && xset r rate 350 30 2>/dev/null
+export PATH="$HOME/.local/bin:$PATH"
+{{- if .work }}
+# Software OpenGL rendering (work VM has no usable GPU driver)
+export LIBGL_ALWAYS_SOFTWARE=1
+{{- end }}

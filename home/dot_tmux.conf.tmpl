@@ -3,7 +3,7 @@
 # =============================================================================
 
 # --- Default Shell (pixi zsh with prezto) ---
-set-option -g default-shell "/home/ehernesten/.pixi/bin/zsh"
+set-option -g default-shell "{{ .chezmoi.homeDir }}/.pixi/bin/zsh"
 
 # --- Prefix Key: Ctrl+a ---
 unbind C-b
@@ -75,13 +75,16 @@ setw -g window-status-current-format ' #I:#W '
 setw -g window-status-style 'fg=grey'
 setw -g window-status-format ' #I:#W '
 
-# --- Window Switcher (prefix+s) ---
-# Flat window list for current session, j/k to navigate, l or Space or Enter to select
-bind s display-popup -E -w 40% -h 40% "tmux list-windows -F '#{window_index}:#{window_name}' | fzf --reverse --no-info --bind 'l:accept,space:accept' --header='Switch window' | cut -d: -f1 | xargs -I{} tmux select-window -t {}"
+# --- Window Switcher (prefix+w) ---
+# Flat window list for current session, j/k to navigate, l/Space/Enter to select, Ctrl+K to kill
+bind w display-popup -E -w 40% -h 40% "tmux list-windows -F '#{window_index}:#{window_name}' | fzf --reverse --no-info --header='Switch window (Ctrl-K: kill)' --bind 'l:accept,space:accept' --bind 'ctrl-k:execute-silent(tmux kill-window -t {1})+reload(tmux list-windows -F \"#{window_index}:#{window_name}\")' | cut -d: -f1 | xargs -r -I{} tmux select-window -t {}"
 
-# --- Session Switcher (prefix+S) ---
-# Flat session list, j/k to navigate, l or Space or Enter to select
-bind S display-popup -E -w 40% -h 40% "tmux list-sessions -F '#{session_name}' | fzf --reverse --no-info --bind 'l:accept,space:accept' --header='Switch session' | xargs -I{} tmux switch-client -t {}"
+# --- Session Switcher (prefix+s) ---
+# Flat session list, j/k to navigate, l/Space/Enter to select, Ctrl+K to kill (except current)
+bind s display-popup -E -w 40% -h 40% "tmux list-sessions -F '#{session_name}' | fzf --reverse --no-info --header='Switch session (Ctrl-K: kill)' --bind 'l:accept,space:accept' --bind 'ctrl-k:execute-silent(tmux kill-session -t {})+reload(tmux list-sessions -F \"#{session_name}\")' | xargs -r -I{} tmux switch-client -t {}"
+
+# --- Rename Window (prefix+m) ---
+bind m command-prompt -I "#{window_name}" -p "Rename window '#{window_name}' to:" "rename-window '%%'"
 
 # --- Reload Config ---
 # Kill pane immediately

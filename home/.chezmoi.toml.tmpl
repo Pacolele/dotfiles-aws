@@ -1,0 +1,29 @@
+{{- /* Rendered once by `chezmoi init` into ~/.config/chezmoi/chezmoi.toml.
+       Answers stay on the local machine and are never committed.
+       Non-interactive: chezmoi init --promptBool "work machine=false" */ -}}
+{{- $work := promptBoolOnce . "work" "work machine" false -}}
+{{- $awsSsoSession := "" -}}
+{{- $awsProfile := "" -}}
+{{- $awsM3dsaOwner := "" -}}
+{{- $awsM3msaOwner := "" -}}
+{{- if $work -}}
+{{-   $awsSsoSession = promptStringOnce . "awsSsoSession" "aws sso session" -}}
+{{-   $awsProfile = promptStringOnce . "awsProfile" "aws profile" -}}
+{{-   $awsM3dsaOwner = promptStringOnce . "awsM3dsaOwner" "m3dsa owner account" -}}
+{{-   $awsM3msaOwner = promptStringOnce . "awsM3msaOwner" "m3msa owner account" -}}
+{{- end -}}
+
+# Keep the source in the clone chezmoi was initialised from (e.g. ~/dotfiles-aws).
+sourceDir = {{ .chezmoi.workingTree | quote }}
+
+[diff]
+pager = "less -R"
+
+[data]
+work = {{ $work }}
+{{- if $work }}
+awsSsoSession = {{ $awsSsoSession | quote }}
+awsProfile = {{ $awsProfile | quote }}
+awsM3dsaOwner = {{ $awsM3dsaOwner | quote }}
+awsM3msaOwner = {{ $awsM3msaOwner | quote }}
+{{- end }}

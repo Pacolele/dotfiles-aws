@@ -1,0 +1,26 @@
+# Third-party files fetched by chezmoi instead of being committed.
+# Pinned to a commit so every machine gets the same files; bump the SHA to update.
+
+# adi1090x/rofi theme collection -> ~/.config/rofi
+# Local overrides (launcher theme, colour scheme) are managed files in
+# home/dot_config/rofi/ and are excluded here so the two sources don't overlap.
+[".config/rofi"]
+type = "archive"
+url = "https://github.com/adi1090x/rofi/archive/512a585fff6da5b2a90e5948059b062516ddb2e7.tar.gz"
+stripComponents = 2
+# Only exclude patterns here: when include and exclude are both set, chezmoi
+# keeps members that match neither, so include = ["*/files/**"] does not filter.
+exclude = [
+  "*/.github",
+  "*/fonts",
+  "*/previews",
+  "*/files/launchers/type-1/launcher.sh",
+  "*/files/launchers/type-1/shared/colors.rasi",
+]
+
+# Fonts used by the rofi themes -> ~/.local/share/fonts
+[".local/share/fonts/rofi"]
+type = "archive"
+url = "https://github.com/adi1090x/rofi/archive/512a585fff6da5b2a90e5948059b062516ddb2e7.tar.gz"
+stripComponents = 2
+include = ["*/fonts", "*/fonts/**"]

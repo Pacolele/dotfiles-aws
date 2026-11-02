@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Refresh the font cache when the fetched fonts change.
+# externals hash: {{ include ".chezmoiexternal.toml" | sha256sum }}
+set -euo pipefail
+
+if command -v fc-cache >/dev/null 2>&1; then
+  fc-cache -f "$HOME/.local/share/fonts" >/dev/null
+fi

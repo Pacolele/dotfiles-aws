@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Install/remove pixi global tools to match ~/.pixi/manifests/pixi-global.toml.
+# Re-runs whenever the manifest changes.
+# manifest hash: {{ include "dot_pixi/manifests/pixi-global.toml" | sha256sum }}
+set -euo pipefail
+
+"$HOME/.pixi/bin/pixi" global sync
