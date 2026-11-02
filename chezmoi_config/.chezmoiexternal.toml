@@ -3,7 +3,7 @@
 
 # adi1090x/rofi theme collection -> ~/.config/rofi
 # Local overrides (launcher theme, colour scheme) are managed files in
-# home/dot_config/rofi/ and are excluded here so the two sources don't overlap.
+# chezmoi_config/dot_config/rofi/ and are excluded here so the two sources don't overlap.
 [".config/rofi"]
 type = "archive"
 url = "https://github.com/adi1090x/rofi/archive/512a585fff6da5b2a90e5948059b062516ddb2e7.tar.gz"

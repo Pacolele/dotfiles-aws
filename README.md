@@ -32,11 +32,11 @@ cd ~/dotfiles-aws
 2. Removes symlinks left by the old symlink-based installer.
 3. Runs `chezmoi init`, which asks whether this is a work machine and stores the answers in `~/.config/chezmoi/chezmoi.toml` (never committed).
 4. Backs up every existing file chezmoi will change to `~/.dotfiles-backup/<timestamp>/`.
-5. Runs `chezmoi apply`, which writes the configs and runs the bootstrap scripts in `home/.chezmoiscripts/`:
+5. Runs `chezmoi apply`, which writes the configs and runs the bootstrap scripts in `chezmoi_config/.chezmoiscripts/`:
    - install pixi if missing
    - `pixi global sync` (re-runs whenever the manifest changes)
    - clone Prezto (with powerlevel10k) and TPM if missing
-   - download the externals in `home/.chezmoiexternal.toml` (rofi themes, rofi fonts) and run `fc-cache`
+   - download the externals in `chezmoi_config/.chezmoiexternal.toml` (rofi themes, rofi fonts) and run `fc-cache`
 
 Without prompts, for example on a personal machine:
 
@@ -71,9 +71,9 @@ The source is this repo (`chezmoi source-path` prints `~/dotfiles-aws/home`). Li
 | After `pixi global install foo` | `chezmoi re-add ~/.pixi/manifests/pixi-global.toml` |
 | Pull and apply on another machine | `chezmoi update` |
 | Commit | `chezmoi cd` then `git commit` / `git push` |
-| Update rofi themes | change the commit SHA in `home/.chezmoiexternal.toml`, then `chezmoi apply` |
+| Update rofi themes | change the commit SHA in `chezmoi_config/.chezmoiexternal.toml`, then `chezmoi apply` |
 
-`chezmoi re-add` skips templates: `.zshrc`, `.tmux.conf`, `alacritty.toml` and `lsp.lua`. Edit those in `home/` directly.
+`chezmoi re-add` skips templates: `.zshrc`, `.tmux.conf`, `alacritty.toml` and `lsp.lua`. Edit those in `chezmoi_config/` directly.
 
 ## Key bindings
 
@@ -137,10 +137,10 @@ The source is this repo (`chezmoi source-path` prints `~/dotfiles-aws/home`). Li
 
 ```
 dotfiles-aws/
-├── .chezmoiroot                      (source state lives in home/)
+├── .chezmoiroot                      (source state lives in chezmoi_config/)
 ├── install.sh                        bootstrap
 ├── README.md
-└── home/
+└── chezmoi_config/
     ├── .chezmoi.toml.tmpl            init prompts -> ~/.config/chezmoi/chezmoi.toml
     ├── .chezmoiexternal.toml         rofi themes + fonts (downloaded, not committed)
     ├── .chezmoiscripts/              pixi / pixi global sync / prezto / tpm / fc-cache
