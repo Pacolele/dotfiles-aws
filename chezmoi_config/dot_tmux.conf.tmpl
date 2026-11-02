@@ -5,6 +5,12 @@
 # --- Default Shell (system zsh; must be listed in /etc/shells) ---
 set-option -g default-shell "/usr/bin/zsh"
 
+# --- PATH for tmux-spawned shells (incl. display-popup pickers) ---
+# Popups run via a non-login shell that does NOT source ~/.zprofile, so tools
+# installed under ~/.pixi/bin or ~/.local/bin (e.g. fzf on WSL) would be missing.
+# chezmoi renders the absolute home path at apply time ({{ .chezmoi.homeDir }}).
+set-environment -g PATH "{{ .chezmoi.homeDir }}/.pixi/bin:{{ .chezmoi.homeDir }}/.local/bin:{{ .chezmoi.homeDir }}/.fzf/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
 # --- Prefix Key: Ctrl+a ---
 unbind C-b
 set-option -g prefix C-a
