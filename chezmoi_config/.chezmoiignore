@@ -1,0 +1,8 @@
+{{- /* Files chezmoi should NOT manage on this machine. Templated. */ -}}
+{{- if .isWsl }}
+# rofi is an X11 application launcher -- useless under WSL, so skip the whole
+# rofi config tree (managed files). The external downloads are also skipped
+# via .chezmoiexternal.toml being templated on .isWsl.
+.config/rofi
+.local/share/fonts/rofi
+{{- end }}

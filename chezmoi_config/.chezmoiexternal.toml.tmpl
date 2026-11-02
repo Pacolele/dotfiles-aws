@@ -1,6 +1,7 @@
 # Third-party files fetched by chezmoi instead of being committed.
 # Pinned to a commit so every machine gets the same files; bump the SHA to update.
-
+{{ if not .isWsl -}}
+# (rofi externals are skipped entirely on WSL -- rofi is an X11 launcher.)
 # adi1090x/rofi theme collection -> ~/.config/rofi
 # Local overrides (launcher theme, colour scheme) are managed files in
 # chezmoi_config/dot_config/rofi/ and are excluded here so the two sources don't overlap.
@@ -24,3 +25,4 @@ type = "archive"
 url = "https://github.com/adi1090x/rofi/archive/512a585fff6da5b2a90e5948059b062516ddb2e7.tar.gz"
 stripComponents = 2
 include = ["*/fonts", "*/fonts/**"]
+{{- end }}

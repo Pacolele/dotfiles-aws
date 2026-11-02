@@ -4,4 +4,13 @@
 # manifest hash: {{ include "dot_pixi/manifests/pixi-global.toml" | sha256sum }}
 set -euo pipefail
 
+# pixi bundles its own CA certs and ignores the system trust store. On machines
+# behind a TLS-inspecting proxy (e.g. Zscaler), the corporate root CA lives in
+# the system bundle, so point pixi at it to avoid SSL verification failures.
+if [[ -r /etc/ssl/certs/ca-certificates.crt ]]; then
+  export SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+  export REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+fi
+
 "$HOME/.pixi/bin/pixi" global sync
+

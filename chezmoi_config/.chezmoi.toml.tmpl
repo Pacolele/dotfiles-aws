@@ -21,6 +21,8 @@ pager = "less -R"
 
 [data]
 work = {{ $work }}
+# Auto-detected: true when running under WSL (kernel osrelease contains microsoft/WSL).
+isWsl = {{ and (eq .chezmoi.os "linux") (or (contains "microsoft" (lower .chezmoi.kernel.osrelease)) (contains "wsl" (lower .chezmoi.kernel.osrelease))) }}
 {{- if $work }}
 awsSsoSession = {{ $awsSsoSession | quote }}
 awsProfile = {{ $awsProfile | quote }}

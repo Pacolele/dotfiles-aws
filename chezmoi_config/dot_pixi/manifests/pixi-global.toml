@@ -10,11 +10,6 @@ channels = ["conda-forge"]
 dependencies = { nvim = "*" }
 exposed = { nvim = "nvim" }
 
-[envs.zsh]
-channels = ["conda-forge"]
-dependencies = { zsh = "*" }
-exposed = { zsh = "zsh", "zsh-5.9" = "zsh-5.9" }
-
 [envs.tmux]
 channels = ["conda-forge"]
 dependencies = { tmux = "*" }
