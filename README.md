@@ -123,10 +123,10 @@ The source is this repo (`chezmoi source-path` prints `~/dotfiles-aws/home`). Li
 
 | Alias | Command |
 |-------|---------|
-| `ls` | `eza -a --group-directories-first --icons` |
-| `ll` | `eza -al --group-directories-first --icons` |
-| `ld` | `eza -D --icons` (directories only) |
-| `lt` | `eza -a --sort=modified --icons` |
+| `ls` | `eza -a --group-directories-first --icons=auto` |
+| `ll` | `eza -al --group-directories-first --icons=auto` |
+| `ld` | `eza -D --icons=auto` (directories only) |
+| `lt` | `eza -a --sort=modified --icons=auto` |
 | `src` | `source ~/.zshrc` |
 | `zconf` | `nvim ~/.zshrc` |
 | `gst` | `~/scripts/git-script/pretty-status` (only if the script exists) |
