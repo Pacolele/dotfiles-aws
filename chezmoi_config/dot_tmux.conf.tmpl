@@ -2,8 +2,8 @@
 # tmux configuration
 # =============================================================================
 
-# --- Default Shell (pixi zsh with prezto) ---
-set-option -g default-shell "{{ .chezmoi.homeDir }}/.pixi/bin/zsh"
+# --- Default Shell (system zsh; must be listed in /etc/shells) ---
+set-option -g default-shell "/usr/bin/zsh"
 
 # --- Prefix Key: Ctrl+a ---
 unbind C-b
@@ -27,6 +27,14 @@ set -sg escape-time 10
 set -g default-terminal "tmux-256color"
 set -ga terminal-overrides ",xterm-256color:Tc"
 
+# --- Clipboard integration ---
+# Let tmux talk to the system clipboard (emits OSC 52, relayed by the terminal
+# to the host clipboard). Required for copy/paste to reach outside tmux.
+set -g set-clipboard on
+set -ga terminal-features ",*:clipboard"
+# Allow escape sequences (incl. clipboard/paste framing) through to apps.
+set -g allow-passthrough on
+
 # --- Mouse Support ---
 set -g mouse on
 
@@ -37,7 +45,15 @@ setw -g mode-keys vi
 bind -T copy-mode-vi v send-keys -X begin-selection
 bind -T copy-mode-vi V send-keys -X select-line
 bind -T copy-mode-vi C-v send-keys -X rectangle-toggle
+{{ if .isWsl -}}
+# WSL: pipe the selection to the Windows clipboard via clip.exe.
+bind -T copy-mode-vi y send-keys -X copy-pipe-and-cancel "clip.exe"
+bind -T copy-mode-vi MouseDragEnd1Pane send-keys -X copy-pipe-and-cancel "clip.exe"
+{{- else -}}
+# Non-WSL: copy to the system clipboard (via set-clipboard/OSC 52).
 bind -T copy-mode-vi y send-keys -X copy-selection-and-cancel
+bind -T copy-mode-vi MouseDragEnd1Pane send-keys -X copy-selection-and-cancel
+{{- end }}
 bind -T copy-mode-vi Escape send-keys -X cancel
 
 # Enter copy mode with prefix + [
