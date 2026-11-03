@@ -9,6 +9,7 @@ Linux development environment, managed with [chezmoi](https://www.chezmoi.io).
 - **Tmux**: vim-style navigation, fzf session/window switcher, TPM with resurrect + continuum
 - **Pixi**: global tool manifest (`~/.pixi/manifests/pixi-global.toml`), synced with `pixi global sync`
 - **Alacritty**: catppuccin macchiato theme, FiraMono Nerd Font
+- **ls / eza**: Catppuccin Macchiato folder and file-type colors, loaded from `~/.config/eza/colors.zsh`; interactive Zsh clears inherited `NO_COLOR` to enable coloring
 - **Rofi**: [adi1090x/rofi](https://github.com/adi1090x/rofi) themes, fetched by chezmoi at a pinned commit; launcher type-1 / style-6 with catppuccin colours
 - **Lazygit**: `~/.config/lazygit/config.yml` (currently empty, lazygit defaults)
 - **Scripts**: `~/scripts/git-script/pretty-status` (used by the `gst` alias)
@@ -155,6 +156,7 @@ dotfiles-aws/
     └── dot_config/
         ├── nvim/                     -> ~/.config/nvim
         ├── alacritty/                -> ~/.config/alacritty
+        ├── eza/                      -> ~/.config/eza (shared ls/eza colors)
         ├── lazygit/                  -> ~/.config/lazygit
         └── rofi/                     local overrides on top of the rofi external
 ```

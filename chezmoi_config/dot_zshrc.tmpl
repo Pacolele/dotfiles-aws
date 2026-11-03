@@ -129,6 +129,8 @@ ca-refresh >/dev/null 2>&1 || {
 #
 # Aliases
 #
+[[ -r "${XDG_CONFIG_HOME:-$HOME/.config}/eza/colors.zsh" ]] && source "${XDG_CONFIG_HOME:-$HOME/.config}/eza/colors.zsh"
+
 # Grep: use underline + bold blue for matches (readable on dark backgrounds)
 export GREP_COLORS='ms=01;34:mc=01;34:sl=:cx=:fn=35:ln=32:bn=32:se=36'
 
